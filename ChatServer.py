@@ -26,6 +26,8 @@ welcomeSocket.listen(1)
 
 print("ChatServer started with server IP: " + ip + ", port: " + port + "...")
 
-while(True):
+while True:
     (connectionSocket, addr) = welcomeSocket.accept()
-    
+    clientMessage = connectionSocket.recv(1024)
+    clientMessage = clientMessage.decode()
+    print("A message was received!")
