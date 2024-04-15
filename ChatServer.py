@@ -1,33 +1,91 @@
+# respond to different types of messages from client
+        # i have literally no idea how the whole nickname prompting thing works because
+        # the initial message sent from client literally is the nickname message
+        # so why is the server prompting for it... again.......
+        # and also the nickname is one of the command line arguments for client so would that just be replaced later?
+        # idk but for now im going to just run with the idea that the initial message is where the server gets the info
+
+from datetime import datetime
 from socket import *
 import sys
+from threading import Thread
+import json
+
+# '127.0.0.1'
+
+def strDateTime():
+    return datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+
+def receiveClientMessages(connectionSocket, addr):
+    while True:
+        # receive single message from client
+        clientMessage = connectionSocket.recv(1024)
+        if not clientMessage:
+            break
+        clientMessage = clientMessage.decode()
+        clientMessageJSON = json.loads(clientMessage)
+
+        if clientMessageJSON["type"] == "nickname":
+            clientInfo.append({
+                "nickname": clientMessageJSON["nickname"],
+                "clientid": clientMessageJSON["clientid"],
+                "ip": clientMessageJSON["ip"],
+                "port": clientMessageJSON["port"]
+            })
+            print(strDateTime() + " :: " + clientMessageJSON["nickname"] + ": connected.\n")
+        elif clientMessageJSON["type"] == "message":
+            index = None
+            for i, info in enumerate(clientInfo):
+                if info["nickname"] == clientMessageJSON["nickname"]:
+                    index = i
+                    break
+            # broadcast message to other clients
+            if index is not None:
+                print("Received: IP: " + clientInfo[index]["ip"] + " Port: " + str(clientInfo[index]["port"]) + " Client-Nickname: " + clientInfo[index]["nickname"] + " Date/Time: " + strDateTime())
+                # broadcast message to other clients
+                index2 = 0;
+                broadcastMsg = ""
+                for client in clients:
+                    if client != connectionSocket:
+                        client.send(clientMessage.encode())
+                        broadcastMsg += clientInfo[index2]["nickname"]
+                    index2 =+ 1
+            print("Broadcasted: " + broadcastMsg)
+        elif clientMessageJSON["type"] == "disconnect":
+            clients.remove(connectionSocket) 
+            for thisClientInfo in clientInfo:
+                if thisClientInfo["clientid"] == clientMessageJSON["clientid"]:
+                    clientInfo.remove(thisClientInfo)
+            connectionSocket.close()
 
 args = sys.argv
 if len(args) != 2:
     print ("Usage: python3 TCPServer.py port")
     exit()
-elif args[1] >= 65536:
-    print("ERR - arg " + args[1])
+elif int(args[1]) >= 65536 or args[1] < 0:
+    print("ERR - arg 1")
     exit()
 
 port = int(args[1])
-ip = 0 #idk where to get IP address hehe
-# come back here ^^^^^^
+hostname = '127.0.0.1'
 
-# what are the params here.........
 welcomeSocket = socket(AF_INET, SOCK_STREAM)
 try:
-    welcomeSocket.bind((ip, port))
-except welcomeSocket.error as e:
-    print("ERR - cannot create ChatServer socket using port number " + port)
+    welcomeSocket.bind((hostname, port))
+except Exception as e:
+    print("ERR - cannot create ChatServer socket using port number " + str(port))
     exit()
-#idk if this is how try catch blocks work ^^^
 
-welcomeSocket.listen(1)
+welcomeSocket.listen(5)
 
-print("ChatServer started with server IP: " + ip + ", port: " + port + "...")
+print("ChatServer started with server IP: " + hostname + ", port: " + str(port) + "...")
+
+clients = []
+clientInfo = []
 
 while True:
     (connectionSocket, addr) = welcomeSocket.accept()
-    clientMessage = connectionSocket.recv(1024)
-    clientMessage = clientMessage.decode()
-    print("A message was received!")
+    clients.append(connectionSocket)
+    initialMessage = ""
+    thread = Thread(target=receiveClientMessages, args=(connectionSocket, addr))
+    thread.start()
