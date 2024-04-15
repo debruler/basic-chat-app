@@ -1,9 +1,4 @@
-# respond to different types of messages from client
-        # i have literally no idea how the whole nickname prompting thing works because
-        # the initial message sent from client literally is the nickname message
-        # so why is the server prompting for it... again.......
-        # and also the nickname is one of the command line arguments for client so would that just be replaced later?
-        # idk but for now im going to just run with the idea that the initial message is where the server gets the info
+# Isabelle deBruler
 
 from datetime import datetime
 from socket import *

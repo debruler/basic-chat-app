@@ -1,3 +1,5 @@
+# Isabelle deBruler
+
 import json
 from socket import *
 from datetime import datetime
@@ -31,7 +33,6 @@ clientSocket.connect((hostname, port))
 
 print("ChatClient started with server IP: " + hostname + ", port: " + str(port) + ", nickname: " + nickname + ", client ID: " + clientid + ", Date/Time: " + strDateTime())
 
-# clientSocket.send(("type: nickname, nickname: " + nickname + ", clientid: " + clientid + ", timestamp: " + strDateTime).encode())
 initialMessage = str.encode(json.dumps({
     "type": "nickname",
     "nickname": nickname,
@@ -66,8 +67,6 @@ while not disconnect:
     serverSentence = clientSocket.recv(1024)
     serverSentence = serverSentence.decode()
     print(serverSentence)
-
-# wait for ack from the server
 
 clientSocket.close()
 print("Summary: ")
